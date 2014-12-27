@@ -26,7 +26,7 @@ int dequeue(int Q[],int *head,int *tail,int size)
     return res;
 
 }
-void bfs(struct graph *G)
+int bfs(struct graph *G)
 {
      int i,j,search,head=0,tail=0,queue[100],u;
      for(i=0;i<100;i++)
@@ -68,8 +68,22 @@ void bfs(struct graph *G)
          }
 
      }
+     return search;
 
 
+
+}
+void print_path(struct graph *G,int start,int end)
+{
+    if(start==end)
+        printf("%d->",start);
+    else if(G->parent[end]==100)
+        printf("path doesnt exist");
+    else
+    {
+        print_path(G,start,G->parent[end]);        /*recursively prints parent pointers*/
+        printf("%d->",end);
+    }
 
 }
 int main()
@@ -77,8 +91,10 @@ int main()
     int i,j;
     struct graph *G;
     G=(struct graph *)malloc(sizeof(struct graph));
-    bfs(G);
+    j=bfs(G);
     for(i=1;i<=G->ver;i++)
         printf("%d\n",G->dist[i]);
+    scanf("%d",&i);
+    print_path(G,j,i);
     return 0;
 }
