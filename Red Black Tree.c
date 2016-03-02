@@ -7,6 +7,12 @@ struct node
 	struct node *left,*right,*parent;
 	
 };
+int col(struct node *head)
+{
+	if(head==NULL)
+		return 0;
+	return head->color;
+}
 int max(int a,int b)
 {
 	return a>b?a:b;
@@ -282,14 +288,12 @@ void insert(struct node **root,int data)
 	new->color=1;
 	Fix_Insert(root,new);
     
-}/*
-void delete(struct node **root,struct node *z)
+}
+struct node *tree_min(struct node *head)
 {
-	struct node *y=z;
-	int original=y->color;
-	if(z->left==NULL)
-
-	
+	if(head->left==NULL)
+		return head;
+	return tree_min(head->left);
 }
 void transplant(struct node **root,struct node *u,struct node *v)
 {
@@ -300,7 +304,125 @@ void transplant(struct node **root,struct node *u,struct node *v)
 	else
 		u->parent->right=v;
 	v->parent=u->parent;	
-}*/
+}
+void Fix_Delete(struct node **root,struct node *x)
+{
+	struct node *w;
+	while(x!=*root && x->color==0)
+	{
+		if(x==x->parent->left)
+		{
+			w=x->parent->right;
+			if(col(w)==1)
+			{
+				w->color=0;
+				x->parent->color=1;
+				Left_Rotate(root,x->parent);
+				w=x->parent->right;
+			}
+			else if(col(w->left)==0 && col(w->right)==0)
+			{
+				w->color=1;
+				x=x->parent;
+			}
+			else if(col(w->right)==0)
+			{
+				if(w->left!=NULL)
+					w->left->color=0;
+				w->color=1;
+				Right_Rotate(root,w);
+				w=x->parent->right;
+			}
+			else
+			{
+				w->color=x->parent->color;
+				x->parent->color=0;
+				if(w->right!=NULL)
+					w->right->color=0;
+				Left_Rotate(root,x->parent);
+				*root=x;
+			}
+
+		}
+		else
+		{
+			w=x->parent->left;
+			if(col(w)==1)
+			{
+				w->color=0;
+				x->parent->color=1;
+				Right_Rotate(root,x->parent);
+			}
+			else if(col(w->left)==0 && col(w->right)==0)
+			{
+				w->color=1;
+				x=x->parent;
+			}
+			else if(col(w->left)==0)
+			{
+				w->right->color=0;
+				w->color=1;
+				Left_Rotate(root,w);
+				w=x->parent->left;
+			}
+			else
+			{
+				w->color=x->parent->color;
+				x->parent->color=0;
+				if(w->left!=NULL)
+					w->left->color=0;
+				Right_Rotate(root,x->parent);
+				*root=x;
+			}
+
+		}
+	}
+	x->color=0;
+}
+void delete(struct node **root,struct node *z)
+{
+	struct node *y=z,*x;
+
+	int original=y->color;
+
+	if(z->left==NULL)
+    {
+    	printf("left\n");
+        x=z->right;
+        transplant(root,z,z->right);
+    }
+    else if(z->right==NULL)
+    {
+    	printf("right\n");
+    	x=z->left;
+    	transplant(root,z,z->left);
+    }
+    else
+    {
+    	//printf("else\n");
+    	y=tree_min(z);
+    	//printf("ddd\n");
+    	original=y->color;
+    	x=y->right;
+    	//printf("dd\n");
+    	if(y->parent==z)
+    		x->parent=y;
+    	else
+    	{
+    		transplant(root,y,y->right);
+    		y->right=z->right;
+    		y->right->parent=y;
+    	}
+    	transplant(root,z,y);
+    	y->left=z->left;
+    	y->left->parent=y;
+    	y->color=z->color;
+    }
+    if(original==0)
+    	Fix_Delete(root,x);
+	
+}
+
 void update_height(struct node *root)
 {
 	if(root==NULL)
@@ -346,6 +468,7 @@ int main()
 	insert(&root,5);
 	insert(&root,6);
 	insert(&root,7);
+	delete(&root,root);
     update_height(root);
 	inorder(root);
 	return 0;
