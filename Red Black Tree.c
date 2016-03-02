@@ -19,6 +19,7 @@ int max(int a,int b)
 }
 void Left_Rotate(struct node **root,struct node *x)
 {
+	printf("\t Left Rotate\n");
 	struct node *y=x->right;
 	x->right=y->left;
 	if(y->left!=NULL)
@@ -36,6 +37,7 @@ void Left_Rotate(struct node **root,struct node *x)
 }
 void Right_Rotate(struct node **root,struct node *x)
 {
+	printf("\tRight Rotate\n");
 	struct node *y=x->left;
 	x->left=y->right;
 	if(y->right!=NULL)
@@ -50,152 +52,7 @@ void Right_Rotate(struct node **root,struct node *x)
 	y->right=x;
 	x->parent=y;
 }
-/*void Fix_Insert(struct node **root,struct node *z)
-{
-    // iterate until z is not the root and z's parent color is red
-    while (z != *root && z->parent->color == 1)
-    {
-        struct node *y;
-        int col1;
-        // Find uncle and store uncle in y
-        if (z->parent == z->parent->parent->left)
-            y = z->parent->parent->right;
-        else
-            y = z->parent->parent->left;
- 
-        // If uncle is RED, do following
-        // (i)  Change color of parent and uncle as BLACK
-        // (ii) Change color of grandparent as RED
-        // (iii) Move z to grandparent
-        if (y != NULL && y->color == 1) // correction
-        {
-            y->color = 0;
-            z->parent->color = 0;
-            z->parent->parent->color = 1;
-            z = z->parent->parent;
-        }
- 
-        // Uncle is BLACK, there are four cases (LL, LR, RL and RR)
-        else
-        {
-            // Left-Left (LL) case, do following
-            // (i)  Swap color of parent and grandparent
-            // (ii) Right Rotate Grandparent
-            if (z->parent == z->parent->parent->left &&
-                z == z->parent->left)
-            {
-                col1 = z->parent->color ;
-                z->parent->color = z->parent->parent->color;
-                z->parent->parent->color = col1;
-                Right_Rotate(root,z->parent->parent);
-				
-            }
- 
-            // Left-Right (LR) case, do following
-            // (i)  Swap color of current node  and grandparent
-            // (ii) Left Rotate Parent
-            // (iii) Right Rotate Grand Parent
-            if (z->parent == z->parent->parent->left &&
-                z == z->parent->right)
-            {
-                col1 = z->color ;
-                z->color = z->parent->parent->color;
-                z->parent->parent->color = col1;
-                Left_Rotate(root,z->parent);
-                Right_Rotate(root,z->parent); // correction
-			//	continue; // correction
-            }
- 
-            // Right-Right (RR) case, do following
-            // (i)  Swap color of parent and grandparent
-            // (ii) Left Rotate Grandparent
-            if (z->parent == z->parent->parent->right &&
-                z == z->parent->right)
-            {
-                col1= z->parent->color ;
-                z->parent->color = z->parent->parent->color;
-                z->parent->parent->color = col1;
-                Left_Rotate(root,z->parent->parent);
-				//continue;
-            }
- 
-            // Right-Left (RL) case, do following
-            // (i)  Swap color of current node  and grandparent
-            // (ii) Right Rotate Parent
-            // (iii) Left Rotate Grand Parent
-            if (z->parent == z->parent->parent->right &&
-                z == z->parent->left)
-            {
-                col1 = z->color ;
-                z->color = z->parent->parent->color;
-                z->parent->parent->color = col1;
-                Right_Rotate(root,z->parent);
-                Left_Rotate(root,z->parent); // correction
-				//continue; // correction
-            } 
-        }
-    }
-    (*root)->color = 0; //keep root always black
-}*/
-/*
-void Fix_Insert(struct node **root, struct node *z)
-{
-    while(z!=*root && z->parent->color==1)
-    {
-        struct node *y;
-        int col1;
-        if(z->parent==z->parent->parent->left)
-            y=z->parent->parent->right;
-        else
-            y=z->parent->parent->left;
-        if(y->color==1)
-        {
-            y->color=0;
-            z->parent->color=0;
-            z->parent->parent->color=1;
-            z=z->parent->parent;
-        }
-        else
-        {
-            if(z->parent==z->parent->parent->left && z==z->parent->left)
-            {
-                col1=z->parent->color;
-                z->parent->color=z->parent->parent->color;
-                z->parent->parent->color=col1;
-                Right_Rotate(root,z->parent->parent);
-                
-            }
-            if(z->parent==z->parent->parent->left && z->parent->right==z)
-            {
-                col1=z->color;
-                z->color=z->parent->parent->color;
-                z->parent->parent->color=col1;
-                Left_Rotate(root,z->parent);
-                Right_Rotate(root,z->parent->parent);
-                
-            }
 
-            if(z->parent==z->parent->parent->right && z->parent->right==z)
-            {
-                col1=z->parent->color;
-                z->parent->color=z->parent->parent->color;
-                z->parent->parent->color=col1;
-                Left_Rotate(root,z->parent->parent);
-                
-            }
-            if(z->parent==z->parent->parent->right && z->parent->left==z)
-            {
-                col1=z->color;
-                z->color=z->parent->parent->color;
-                z->parent->parent->color=col1;
-                Right_Rotate(root,z->parent);
-                Left_Rotate(root,z->parent->parent);
-                
-            }
-        }
-    }
-    (*root)->color=0;
-}*/
 void Fix_Insert(struct node **root,struct node *x)
 {
 	while(x!=*root && x->parent->color==1)
@@ -303,11 +160,13 @@ void transplant(struct node **root,struct node *u,struct node *v)
 		u->parent->left=v;
 	else
 		u->parent->right=v;
-	v->parent=u->parent;	
+	if(v!=NULL)
+		v->parent=u->parent;	
 }
 void Fix_Delete(struct node **root,struct node *x)
 {
 	struct node *w;
+	printf("in\n");
 	while(x!=*root && x->color==0)
 	{
 		if(x==x->parent->left)
@@ -381,50 +240,110 @@ void Fix_Delete(struct node **root,struct node *x)
 }
 void delete(struct node **root,struct node *z)
 {
-	struct node *y=z,*x;
-
-	int original=y->color;
+	struct node *y=z,*x,*dummy_parent;
+	int original=y->color,flag=0,lefty=0,righty=0;
 
 	if(z->left==NULL)
     {
     	printf("left\n");
         x=z->right;
+        if(x==NULL)
+        {
+        	flag=1;
+        	x=(struct node *)malloc(sizeof(struct node));
+        	x->left=x->right=NULL;
+        	x->color=0;
+        	x->parent=z;
+        	z->right=x;
+        	dummy_parent=z->parent;
+        	if(z->parent->right==z)
+        		righty=1;
+        	else 
+        		lefty=1;
+        }
         transplant(root,z,z->right);
     }
     else if(z->right==NULL)
     {
     	printf("right\n");
     	x=z->left;
+        if(x==NULL)
+        {
+        	flag=1;
+        	x=(struct node *)malloc(sizeof(struct node));
+        	x->left=x->right=NULL;
+        	x->parent=z;
+        	x->color=0;
+        	z->left=x;
+        	dummy_parent=z->parent;
+        	if(z->parent->right==z)
+        		righty=1;
+        	else
+        		lefty=1;    
+        }
     	transplant(root,z,z->left);
     }
     else
     {
-    	//printf("else\n");
-    	y=tree_min(z);
-    	//printf("ddd\n");
+    //	printf("z %d\n",z->right->data);
+    	y=tree_min(z->right);
+    	
     	original=y->color;
     	x=y->right;
-    	//printf("dd\n");
-    	if(y->parent==z)
-    		x->parent=y;
-    	else
+        if(x==NULL)
+        {
+        	flag=1;
+        	x=(struct node *)malloc(sizeof(struct node));
+        	x->left=x->right=NULL;
+        	x->parent=y->parent;
+        	x->color=0;
+        	y->right=x;
+      
+        	dummy_parent=y->parent;
+        	if(y->parent->right==y)
+        		righty=1;
+        	else
+        		lefty=1;
+        }
+    //	printf("dd %d \n",y->data);
+    	if(y->parent!=z)
     	{
+    		printf("dafda\n");
     		transplant(root,y,y->right);
     		y->right=z->right;
     		y->right->parent=y;
     	}
+    	printf("add\n");
     	transplant(root,z,y);
     	y->left=z->left;
     	y->left->parent=y;
     	y->color=z->color;
+    	free(z);
+    	
     }
     if(original==0)
     	Fix_Delete(root,x);
+    if(flag==1)
+    {
+    	x->left=x->right=NULL;/*
+    	if(x->parent->left==x)
+    		x->parent->left=NULL;
+    	else if(x->parent->right==x)
+    		x->parent->right=NULL;*/
+    	x=NULL;
+        if(lefty==1)
+        	dummy_parent->left=NULL;
+        else
+        	dummy_parent->right=NULL;
+        //printf("misssss %d\n",dummy_parent->data );
+    	free(x);
+    }
 	
 }
 
 void update_height(struct node *root)
 {
+	//printf("ff %d \n",root->data);
 	if(root==NULL)
 		return;
 	if(root->left==NULL && root->right==NULL)
@@ -441,6 +360,7 @@ void update_height(struct node *root)
     }
     else
     {
+      //  printf("dd %d\n",root->data );
     	update_height(root->left);
     	update_height(root->right);
     	root->height=max(root->left->height,root->right->height)+1;
@@ -468,8 +388,13 @@ int main()
 	insert(&root,5);
 	insert(&root,6);
 	insert(&root,7);
+
+     
 	delete(&root,root);
+	printf("Deleting element %d\n",root->data );
+//printf("%d\n",root->data );
     update_height(root);
+
 	inorder(root);
 	return 0;
 }
