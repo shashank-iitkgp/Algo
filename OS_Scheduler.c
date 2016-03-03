@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+
 struct node
 {
 	int exec_time,height,priority,process_id;
@@ -7,8 +8,10 @@ struct node
 	struct node *left,*right,*parent;
 	
 };
+
 void update_height(struct node *root);
 void inorder(struct node *root);
+FILE *fp;
 int col(struct node *head)
 {
 	if(head==NULL)
@@ -19,9 +22,10 @@ int max(int a,int b)
 {
 	return a>b?a:b;
 }
+
 void Left_Rotate(struct node **root,struct node *x)
 {
-	printf("\t Left Rotate\n");
+//	printf("\t Left Rotate\n");
 	struct node *y=x->right;
 	x->right=y->left;
 	if(y->left!=NULL)
@@ -39,7 +43,7 @@ void Left_Rotate(struct node **root,struct node *x)
 }
 void Right_Rotate(struct node **root,struct node *x)
 {
-	printf("\tRight Rotate\n");
+//	printf("\tRight Rotate\n");
 	struct node *y=x->left;
 	x->left=y->right;
 	if(y->right!=NULL)
@@ -168,7 +172,7 @@ void transplant(struct node **root,struct node *u,struct node *v)
 void Fix_Delete(struct node **root,struct node *x)
 {
 	struct node *w;
-	printf("in\n");
+//	printf("in\n");
 	while(x!=*root && x->color==0)
 	{
 		if(x==x->parent->left)
@@ -244,11 +248,14 @@ void Fix_Delete(struct node **root,struct node *x)
 void delete(struct node **root,struct node *z)
 {
 	struct node *y=z,*x,*dummy_parent;
-	int original=y->color,flag=0,lefty=0,righty=0;
-
-	if(z->left==NULL)
+	int original=y->color,flag=0,lefty=0,righty=0;/*
+	if(z==*root && z->left==NULL && z->right==NULL)
+		*root=NULL;*/
+	if(z==*root)
+		*root=NULL;
+	else if(z->left==NULL)
     {
-    	printf("left\n");
+    //	printf("left\n");
         x=z->right;
         if(x==NULL)
         {
@@ -268,7 +275,7 @@ void delete(struct node **root,struct node *z)
     }
     else if(z->right==NULL)
     {
-    	printf("right\n");
+    //	printf("right\n");
     	x=z->left;
         if(x==NULL)
         {
@@ -319,12 +326,12 @@ void delete(struct node **root,struct node *z)
     //	printf("dd %d \n",y->data);
     	if(y->parent!=z)
     	{
-    		printf("dafda\n");
+    	//	printf("dafda\n");
     		transplant(root,y,y->right);
     		y->right=z->right;
     		y->right->parent=y;
     	}
-    	printf("add\n");
+    //	printf("add\n");
     	transplant(root,z,y);
     	y->left=z->left;
     	y->left->parent=y;
@@ -388,43 +395,138 @@ void inorder(struct node *root)
 	int i;
 	inorder(root->left);
 	for(i=0;i<root->height;i++)
-		printf("\t");
-	printf("%d %d\n",root->exec_time,root->color);
+		fprintf(stdout,"\t");
+	fprintf(stdout,"%d %d\n",root->exec_time,root->color);
 	inorder(root->right);
 }
-earlier_random=0;
+int earlier_random=0;
+int uniq[1010]={0},present=0,pid=1;
+long int t=0;
+
 int generate_random(int exec)
 {
 	time_t t;
 	srand((unsigned) time(&t));
 	srand((unsigned) time(&t)+ rand()+rand()%100 +rand()%1000);
-	srand((unsigned) time (&t)+ earlier_random+rand()%10000);
-	if(exec)
-		return 1+rand()%1000;
-	else
+	srand((unsigned) time (&t)+ earlier_random+t+rand()%10000);
+	if(exec==1)
+	{
+		int a;
+		while(1)
+		{
+			a=1+rand()%1000;
+			if(uniq[a]==0)
+			{
+				uniq[a]=1;
+				break;
+			}
+		}
+		earlier_random=a;
+		return a;
+	}
+	else if(exec==0)
 		return 1+rand()%4;
+	else if(exec==2)
+		return rand();
 
 }
-void process_creator(int p_id)
+struct node * smallest_node(struct node *head)
 {
-	
-	struct node *process=insert(root,generate_random(1));
-	process->priority=generate_random(0);
-	process->process_id=p_id;
-
+	if(head->left==NULL)
+		return head;
+	return smallest_node(head->left);
 }
-void process_scheduler(int N,int M)
+int total_process(struct node *head)
 {
+	if(head==NULL)
+		return 0;
+	else if(head->left==NULL && head->right==NULL)
+		return 1;
+	else if(head->left==NULL)
+		return total_process(head->right)+1;
+	else if(head->right==NULL)
+		return total_process(head->left)+1;
+	else
+		return total_process(head->left)+total_process(head->right)+1;
+}
+void process_creator(int N,int M,struct node **root)
+{
+	if(present<M)
+	{
+		int i,process_created,less;
+		less=((M-present)<(N-total_process(*root)))?(M-present):(N-total_process(*root));
+		process_created=generate_random(2)%(less)+1;
+		fprintf(stdout,"%ld:\tCreated %d processes\n",t,process_created );		
+		struct node *new_process;
+		present+=process_created;
+		for(i=0;i<process_created;i++)
+		{
+			new_process=insert(root,generate_random(1));
+			new_process->priority=generate_random(0);
+			new_process->process_id=pid;
+			fprintf(stdout,"%ld:\tInserted process in the tree:\tP_Id:%d Execution time: %d Priority: %d \n",t,pid++,new_process->exec_time,new_process->priority);
+		}
+		printf("The process structure looks like \n");
+		update_height(*root);
+		inorder(*root);
+	}
+}
+void process_scheduler(int N,int M,struct node **root)
+{
+	int done=0,remaining_time,pres_priority,pres_pid;
+	long int i;
+	struct node *smallest,*process_exec;
+	while(done<M)
+	{
+		process_creator(N,M,root);/*
+		//fprintf(fp,"Running process creator again %d\n",*root==NULL );
+		if(done==M-2)
+		{
+			for(i=t;i<t+(*root)->exec_time;i=i+50*(*root)->priority)
+			{
+				fprintf(fp,"%ld:\t Process Scheduled %d\n",i,(*root)->process_id );
+				fprintf(fp,"%ld:\t Process Preempted %d\n",i+50*(*root)->priority,(*root)->process_id );
+			}
+			fprintf(fp,"%ld:\t Process %d finished execution \n",t+(*root)->exec_time,(*root)->process_id );
+			break;
+		}*/
 
-
+	    smallest=smallest_node(*root);
+        fprintf(stdout,"%ld:\tProcess Scheduled is %d \n",t,smallest->process_id);
+        if(smallest->exec_time>50*smallest->priority)
+        {
+        	t+=50*smallest->priority;
+        	fprintf(stdout,"%ld:\tProcess Preempted is %d \n",t,smallest->process_id);
+        	remaining_time=smallest->exec_time-50*smallest->priority;
+        	pres_priority=smallest->priority;
+        	pres_pid=smallest->process_id;
+        //	printf("ddddd\n");
+        	delete(root,smallest);
+        	process_exec=insert(root,remaining_time);
+        	process_exec->priority=pres_priority;
+        	process_exec->process_id=pres_pid;
+        }
+        else
+        {
+        	t+=smallest->exec_time;
+        	fprintf(stdout,"%ld:\tProcess %d finished execution \n",t,smallest->process_id);
+        	delete(root,smallest);
+        	done++;
+        }
+        
+	}
 }
 int main()
 {
+	fp=fopen("output.txt","w");
 	struct node *root=NULL;
 	int n,m,i;
-	printf("Enter the maximum number of live processes N\n");
-	printf("Enter total number of processes to be completed\n");
-	scanf("%d %d",&n,&m);
-
+	fprintf(stdout,"Enter the maximum number of live processes N\n");
+	scanf("%d",&n);
+	fprintf(stdout,"Enter total number of processes M to be completed\n");
+	scanf("%d",&m);
+	fprintf(stdout, "TIME\t DESCRIPTION\n");
+	process_scheduler(n,m,&root);
+	fclose(fp);
 	return 0;
 }
