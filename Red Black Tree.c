@@ -1,5 +1,5 @@
-#include<stdio.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 struct node
 {
 	int data,height;
@@ -7,6 +7,8 @@ struct node
 	struct node *left,*right,*parent;
 	
 };
+void update_height(struct node *root);
+void inorder(struct node *root);
 int col(struct node *head)
 {
 	if(head==NULL)
@@ -194,12 +196,13 @@ void Fix_Delete(struct node **root,struct node *x)
 			}
 			else
 			{
+				printf("%d\n",w->data );
 				w->color=x->parent->color;
 				x->parent->color=0;
 				if(w->right!=NULL)
 					w->right->color=0;
 				Left_Rotate(root,x->parent);
-				*root=x;
+				break;
 			}
 
 		}
@@ -231,7 +234,7 @@ void Fix_Delete(struct node **root,struct node *x)
 				if(w->left!=NULL)
 					w->left->color=0;
 				Right_Rotate(root,x->parent);
-				*root=x;
+				break;
 			}
 
 		}
@@ -295,11 +298,19 @@ void delete(struct node **root,struct node *z)
         	flag=1;
         	x=(struct node *)malloc(sizeof(struct node));
         	x->left=x->right=NULL;
-        	x->parent=y->parent;
+        	
         	x->color=0;
         	y->right=x;
-      
-        	dummy_parent=y->parent;
+            if(y->parent==z)
+            {
+                x->parent=y;	
+            	dummy_parent=y;
+            }
+            else
+            {
+            	x->parent=y->parent;
+            	dummy_parent=y->parent;
+            }
         	if(y->parent->right==y)
         		righty=1;
         	else
@@ -325,12 +336,15 @@ void delete(struct node **root,struct node *z)
     	Fix_Delete(root,x);
     if(flag==1)
     {
-    	x->left=x->right=NULL;/*
+
+    	x->left=x->right=NULL;
+    	x->parent=NULL;/*
     	if(x->parent->left==x)
     		x->parent->left=NULL;
     	else if(x->parent->right==x)
     		x->parent->right=NULL;*/
     	x=NULL;
+    //    printf("\thhf %d %d %d\n",dummy_parent->data,lefty,righty );
         if(lefty==1)
         	dummy_parent->left=NULL;
         else
@@ -388,10 +402,7 @@ int main()
 	insert(&root,5);
 	insert(&root,6);
 	insert(&root,7);
-
-     
-	delete(&root,root);
-	printf("Deleting element %d\n",root->data );
+	delete(&root,root->right->right->right);
 //printf("%d\n",root->data );
     update_height(root);
 
