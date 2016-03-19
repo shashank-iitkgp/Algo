@@ -1,21 +1,27 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<math.h>
-struct particle
-{
-    float x,y,vx,vy,rad,time;
-    char color[10];
-    
-};
+
 struct coll_queue
 {
     float tim;
-    int p1,p2; 
+    int flag,horizontal,p1,p2; 
     
 };
+struct particle
+{
+    float x,y,vx,vy,rad,time;
+    struct coll_queue *data[100];
+    int data_size;  
+    char color[10];
+    
+};
+FILE *fp[5];
+
 struct particle par[1050];
 int earlier_random=0;
 int t1=23;
+int length=100,breadth=100;
 int generate_random(int param)
 {
     time_t t;
@@ -59,7 +65,7 @@ void print_state(int size,float tim)
     int i;
     //printf("\t%d %f \n",size,tim);
     for(i=0;i<size;i++)
-        printf("The generated particle %d after %f seconds is at (%f,%f) with velocity %f i + %f j having radius %f \n",i,tim,par[i].x,par[i].y,par[i].vx,par[i].vy,par[i].rad );
+        fprintf(fp[i],"The generated particle %d after %f seconds is at (%f,%f) with velocity %f i + %f j having radius %f \n",i,tim,par[i].x,par[i].y,par[i].vx,par[i].vy,par[i].rad );
 }
 int parent(int i)
 {
@@ -111,25 +117,67 @@ int update_queue(struct coll_queue priority_queue[],int size)
                 continue;
             else
             {
-                priority_queue[size1].p1=i;
-                priority_queue[size1].p2=j;
-                priority_queue[size1].tim=10000.0;
+                
                 if(collide(par[i].x,par[i].y,par[i].vx,par[i].vy,par[i].rad,par[j].x,par[j].y,par[j].vx,par[j].vy,par[j].rad,&t))
                 {
-                        priority_queue[size1].tim=t;
-                        collision++;
-                        printf("Particle %d and %d collide after %fseconds\n",priority_queue[size1].p1,priority_queue[size1].p2,priority_queue[size1].tim );
+                    priority_queue[size1].p1=i;
+                    priority_queue[size1].p2=j;
+                    priority_queue[size1].flag=1;
+                    priority_queue[size1].tim=t;
+                    //par[i].data[par[i].data_size++]=&priority_queue[size1];
+                    //par[j].data[par[j].data_size++]=&priority_queue[size1++];
+                    collision++;
+                    fprintf(fp[i],"Particle %d and %d collide after %fseconds\n",priority_queue[size1].p1,priority_queue[size1].p2,priority_queue[size1].tim );
+                    fprintf(fp[j],"Particle %d and %d collide after %fseconds\n",priority_queue[size1].p1,priority_queue[size1].p2,priority_queue[size1].tim );
+                    size1++;
                 }
-                size1++;                
             }
         }
+    for(i=0;i<size;i++)
+    {
+        priority_queue[size1].flag=0;
+        priority_queue[size1].horizontal=1;
+        if(par[i].vy==0)
+            priority_queue[size1].tim=10000.0;
+        else if(par[i].vy<0)
+            priority_queue[size1].tim=fabs((par[i].y-par[i].rad)/par[i].vy);
+        else
+            priority_queue[size1].tim=fabs((breadth-par[i].y-par[i].rad)/par[i].vy);
+        priority_queue[size1].p1=i;
+        par[i].data[par[i].data_size++]=&priority_queue[size1++];
+        priority_queue[size1].flag=0;
+        priority_queue[size1].horizontal=0;
+        if(par[i].vx==0)
+            priority_queue[size1].tim=10000.0;
+        else if(par[i].vx<0)
+            priority_queue[size1].tim=fabs((par[i].x-par[i].rad)/par[i].vx);
+        else
+            priority_queue[size1].tim=fabs((length-par[i].x-par[i].rad)/par[i].vx);
+        priority_queue[size1].p1=i;
+        par[i].data[par[i].data_size++]=&priority_queue[size1++];
+
+    }
+
     //printf("The number of colliding particles are : %d \n",collision );
-    build_minheap(priority_queue,size1-1);/*
+    build_minheap(priority_queue,size1-1);
+    return size1-1;
+    /*
     printf("The queue contains\n");
     for(i=1;i<size1;i++)
         printf("Particle %d and %d collide after %fseconds\n",priority_queue[i].p1,priority_queue[i].p2,priority_queue[i].tim );
     printf("\n");*/
 
+}
+void after_wall_collision(int i,int horizontal)
+{
+    if(horizontal)
+        par[i].vy=-par[i].vy;
+    else
+        par[i].vx=-par[i].vx;
+    if(horizontal)
+        fprintf(fp[i],"After horizontal collision particle %d has velocity %f i + %f j\n",i,par[i].vx,par[i].vy );
+    else
+        fprintf(fp[i],"After vertical  collision particle %d has velocity %f i + %f j\n",i,par[i].vx,par[i].vy );
 }
 void after_collision(int i,int j)
 {
@@ -149,14 +197,14 @@ void after_collision(int i,int j)
     par[i].vy=vy_n*v1_new_n+vy_t*v1_t;
     par[j].vx=vx_n*v2_new_n+vx_t*v2_t;
     par[j].vy=vy_n*v2_new_n+vy_t*v2_t;
-    printf("After collision data of particle %d is %f i + %f j \n",i,par[i].vx,par[i].vy);
-    printf("After collision data of particle %d is %f i + %f j \n",j,par[j].vx,par[j].vy);
+    fprintf(fp[i],"After collision data of particle %d is %f i + %f j \n",i,par[i].vx,par[i].vy);
+    fprintf(fp[j],"After collision data of particle %d is %f i + %f j \n",j,par[j].vx,par[j].vy);
 }
-void simulate(struct coll_queue priority_queue[],int size)
+void simulate(struct coll_queue priority_queue[],int size,int q_size,int window)
 {
     float interval,present=0;
-    int i;
-    while(priority_queue[1].tim!=10000.0)
+    int i,size1;
+    while(present<window)
     {
         //printf("The priority time is %f \n",priority_queue[1].tim );
         interval=priority_queue[1].tim;
@@ -168,33 +216,50 @@ void simulate(struct coll_queue priority_queue[],int size)
             //printf("Updated position for %d is (%f,%f) \n",i,par[i].vx,par[i].vy);
             
         }
-        after_collision(priority_queue[1].p1,priority_queue[1].p2);
+        if(priority_queue[1].flag==1)
+            after_collision(priority_queue[1].p1,priority_queue[1].p2);
+        else
+            after_wall_collision(priority_queue[1].p1,priority_queue[1].horizontal);
         present+=interval;
         print_state(size,present);
-        update_queue(priority_queue,size);
+        q_size=update_queue(priority_queue,size);
         
 
     }
 }
 int main()
 {
-    int size1,i,size2=0;
-    
+    int size1,i,size2=0,window;
+    fp[0]=fopen("0.txt","w");
+    fp[1]=fopen("1.txt","w");
+    fp[2]=fopen("2.txt","w");
+    fp[3]=fopen("3.txt","w");
+    fp[4]=fopen("4.txt","w");
     struct coll_queue priority_queue[1050];   
     priority_queue[1].tim=10000.0;
-    printf("Enter the number of particles\n");   /*scanf("%d",&size1);*/size1=generate_random(4);
+    printf("Enter the dimensions of 2-D board \n");
+    scanf("%d %d",&length,&breadth);
+    printf("Enter the number of particles\n");   scanf("%d",&size1);//*/size1=generate_random(4);
+    printf("Enter the time window \n");
+    scanf("%d",&window);
     printf("The number of particles generated are %d\n",size1); 
     for(i=0;i<size1;i++)
-    {
+    {/*
         par[i].x=1.0*generate_random(1); par[i].y=1.0*generate_random(1);
         par[i].vx=1.0*generate_random(2); par[i].vy=1.0*generate_random(2);
-        par[i].rad=1.0;//*generate_random(3);
-        //scanf("%f %f %f %f %f",&par[i].x,&par[i].y,&par[i].vx,&par[i].vy,&par[i].rad);
-        printf("The generated particle is at (%f,%f) with velocity %f i + %f j having radius %f \n",par[i].x,par[i].y,par[i].vx,par[i].vy,par[i].rad );
+        par[i].rad=1.0;//*generate_random(3);*/
+        scanf("%f %f %f %f %f",&par[i].x,&par[i].y,&par[i].vx,&par[i].vy,&par[i].rad);
+        par[i].data_size=0;
+        //printf("The generated particle is at (%f,%f) with velocity %f i + %f j having radius %f \n",par[i].x,par[i].y,par[i].vx,par[i].vy,par[i].rad );
     }
     //print_state(size1,0);
-    update_queue(priority_queue,size1);
-    simulate(priority_queue,size1);
+    size2=update_queue(priority_queue,size1);
+    simulate(priority_queue,size1,size2,window);
+    fclose(fp[0]);
+    fclose(fp[1]);
+    fclose(fp[2]);
+    fclose(fp[3]);
+    fclose(fp[4]);
     return 0;
     
 }
